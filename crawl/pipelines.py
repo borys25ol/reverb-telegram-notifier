@@ -1,10 +1,10 @@
 import logging
 
-from scrapy import Item, Spider
-from scrapy.exceptions import NotConfigured
-from scrapy.settings import BaseSettings
-from tinydb import Query, TinyDB
+from itemadapter import ItemAdapter
+from scrapy import Spider
 
+from crawl.items import ReverbProductItem
+from crawl.services.products import get_available_product_ids, insert_new_products
 from crawl.utils.telegram import send_message
 
 logger = logging.getLogger(__name__)
@@ -16,45 +16,35 @@ class TelegramNotificationPipeline:
     if a new listing is available.
     """
 
-    def __init__(self, db_path: str) -> None:
-        self.listings: list[dict] = []
-        self.db = TinyDB(db_path)
+    def __init__(self) -> None:
+        self.scraped_products: list[ItemAdapter] = []
 
-    @classmethod
-    def from_settings(cls, settings: BaseSettings) -> "TelegramNotificationPipeline":
-        if not settings.get("TELEGRAM_BOT_TOKEN"):
-            raise NotConfigured("Telegram Bot token not provided")
-
-        if not settings.get("TELEGRAM_CHAT_ID"):
-            raise NotConfigured("Telegram Chat ID not provided")
-
-        local_db_path = settings.get("JSON_DB_PATH")
-
-        return cls(db_path=local_db_path)
-
-    def process_item(self, item: Item, spider: Spider) -> Item:
-        self.listings.append(item)
+    def process_item(
+        self, item: ReverbProductItem, spider: Spider
+    ) -> ReverbProductItem:
+        self.scraped_products.append(ItemAdapter(item))
         return item
 
     def close_spider(self, spider: Spider) -> None:
-        new_products = self._process_scraped_listings(listings=self.listings)
+        available_ids = get_available_product_ids()
+        logger.info(f"Got {len(available_ids)} available products")
+
+        if new_products := self._process_scraped_products(
+            scraped_products=self.scraped_products, available_ids=available_ids
+        ):
+            insert_new_products(products=new_products)
+
+        logger.info(f"Got {len(new_products)} new products after scraping")
+
         for product in new_products:
             send_message(product=product)
 
-    def _process_scraped_listings(self, listings: list[dict]) -> list[dict]:
-        new_products = []
-
-        for item in listings:
-            for product in item["listings"]:
-                if not self._check_if_product_exists(product_id=product["id"]):
-                    logger.info(f"Inserting product with id: {product['id']}")
-                    new_products.append(product)
-                    self.db.insert(document=product)
-                else:
-                    logger.info(f"Product with id: {product['id']} already exists")
-
-        return new_products
-
-    def _check_if_product_exists(self, product_id: str) -> bool:
-        product = Query()
-        return bool(self.db.search(product.id == product_id))
+    @staticmethod
+    def _process_scraped_products(
+        scraped_products: list[ItemAdapter], available_ids: set[str]
+    ) -> list[dict]:
+        return [
+            product.asdict()
+            for product in scraped_products
+            if product["id"] not in available_ids
+        ]

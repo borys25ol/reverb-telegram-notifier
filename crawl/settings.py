@@ -8,12 +8,16 @@ load_dotenv()
 BASE_PATH = Path(__file__).parent.parent
 
 TEMPLATES_PATH = BASE_PATH / "crawl" / "templates"
-TELEGRAM_MESSAGE_TEMPLATE_FILE = "telegram_message.jinja2"
 
+# Telegram settings
+TELEGRAM_MESSAGE_TEMPLATE_FILE = "telegram_message.jinja2"
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-JSON_DB_PATH = BASE_PATH / os.getenv("JSON_DB_NAME", default="reverb.json")
+# MongoDB settings
+MONGO_URI = os.getenv("MONGO_URI")
+MONGO_DB = os.getenv("MONGO_DB")
+MONGO_PRODUCT_COLLECTION = os.getenv("MONGO_PRODUCT_COLLECTION")
 
 BOT_NAME = "reverb-crawl"
 
