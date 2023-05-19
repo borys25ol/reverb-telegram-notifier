@@ -1,0 +1,30 @@
+name: Trigger scraping on a CRON Schedule
+
+on:
+  schedule:
+    - cron: '30 * * * *'
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Create env file
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Pull docker images
+        run: |
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPO }}
+
+      - name: Execute job
+        run: |
+          docker run --rm --env-file .env --tty ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPO }}
