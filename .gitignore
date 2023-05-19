@@ -1,0 +1,12 @@
+.ve
+.idea
+.DS_Store
+__pycache__
+*.pyc
+logs
+.env
+*.db
+.vscode
+.coverage
+/logs
+reverb.json

@@ -1,0 +1,32 @@
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+BASE_PATH = Path(__file__).parent.parent
+
+TEMPLATES_PATH = BASE_PATH / "crawl" / "templates"
+TELEGRAM_MESSAGE_TEMPLATE_FILE = "telegram_message.jinja2"
+
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+JSON_DB_PATH = BASE_PATH / os.getenv("JSON_DB_NAME", default="reverb.json")
+
+BOT_NAME = "reverb-crawl"
+
+SPIDER_MODULES = ["crawl.spiders"]
+NEWSPIDER_MODULE = "crawl.spiders"
+
+USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36"'
+)
+
+ROBOTSTXT_OBEY = False
+
+REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
+TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
+FEED_EXPORT_ENCODING = "utf-8"
