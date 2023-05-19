@@ -3,11 +3,13 @@ from typing import Iterator
 from urllib.parse import urlparse
 
 import scrapy
+from itemloaders import ItemLoader
 from scrapy import Request
 from scrapy.http import HtmlResponse
 from scrapy.utils.project import get_project_settings
 
 from crawl.const import LINKS_TO_CHECK
+from crawl.items import ReverbProductItem
 from crawl.utils.extractors import chain_get
 from crawl.utils.payload import get_json_body_template
 
@@ -56,49 +58,56 @@ class ReverbComSpider(scrapy.Spider):
                 callback=self.parse_reverb_api,
                 headers=self.default_headers,
                 body=payload,
-                cb_kwargs={"product_name": item["name"], "category_link": item["link"]},
+                cb_kwargs={"category_link": item["link"]},
             )
 
     def parse_reverb_api(
-        self, response: HtmlResponse, product_name: str, category_link: str
-    ) -> dict:
+        self, response: HtmlResponse, category_link: str
+    ) -> list[dict]:
         data = chain_get(response.json(), 0, "data", "allListings")
+        yield from (
+            self.parse_reverb_product(product=product, category_link=category_link)
+            for product in data["listings"]
+        )
 
-        products_feed = {"category": product_name, "listings": []}
+    def parse_reverb_product(
+        self, product: dict, category_link: str
+    ) -> ReverbProductItem:
+        l = ItemLoader(item=ReverbProductItem(), selector=product)
 
-        for item in data["listings"]:
-            seller_data = {
-                "seller_name": chain_get(item, "shop", "name"),
-                "seller_location": chain_get(
-                    item, "shop", "address", "displayLocation"
-                ),
-                "seller_rating": chain_get(
-                    item, "seller", "feedbackSummary", "receivedCount"
-                ),
-            }
+        l.add_value("seller_name", chain_get(product, "shop", "name"))
+        l.add_value(
+            "seller_location", chain_get(product, "shop", "address", "displayLocation")
+        )
+        l.add_value(
+            "seller_rating",
+            chain_get(product, "seller", "feedbackSummary", "receivedCount"),
+        )
 
-            product_data = {
-                "id": item["id"],
-                "title": item["title"],
-                "listing_type": item["listingType"],
-                "condition": chain_get(item, "condition", "displayName"),
-                "price": chain_get(item, "pricing", "buyerPrice", "display"),
-                "shipping": chain_get(
-                    item, "shipping", "shippingPrices", 0, "rate", "display"
-                ),
-                "product_link": self._make_product_url(
-                    product_id=item["id"], slug=item["slug"]
-                ),
-                "category_link": category_link,
-                "timestamp": chain_get(item, "publishedAt", "seconds"),
-                "published": self._convert_timestamp_to_date(
-                    timestamp=chain_get(item, "publishedAt", "seconds")
-                ),
-            }
+        l.add_value("id", product["id"])
+        l.add_value("title", product["title"])
+        l.add_value("listing_type", product["listingType"])
+        l.add_value("condition", chain_get(product, "condition", "displayName"))
+        l.add_value("price", chain_get(product, "pricing", "buyerPrice", "display"))
+        l.add_value(
+            "shipping",
+            chain_get(product, "shipping", "shippingPrices", 0, "rate", "display"),
+        )
+        l.add_value(
+            "product_link",
+            self._make_product_url(product_id=product["id"], slug=product["slug"]),
+        )
+        l.add_value("category_link", category_link)
+        l.add_value("timestamp", chain_get(product, "publishedAt", "seconds"))
 
-            products_feed["listings"].append({**product_data, **seller_data})
+        l.add_value(
+            "published",
+            self._convert_timestamp_to_date(
+                timestamp=chain_get(product, "publishedAt", "seconds")
+            ),
+        )
 
-        return products_feed
+        return l.load_item()
 
     @staticmethod
     def _make_product_url(product_id: str, slug: str) -> str:
