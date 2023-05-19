@@ -1,8 +1,9 @@
-version: '3.8'
+version: '3.9'
 
 services:
   reverb-notifier:
     build: .
+    image: reverb-notifier
     container_name: reverb-notifier
-    volumes:
-      - ./reverb.json:./reverb.json
+    env_file:
+      - .env

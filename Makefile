@@ -9,21 +9,8 @@ docker_build:
 docker_up:
 	docker-compose up -d
 
-docker_start:
-	docker-compose start
-
-docker_down:
-	docker-compose down
-
-docker_destroy:
-	docker-compose down -v
-
-docker_stop:
-	docker-compose stop
-
-docker_restart:
-	docker-compose stop
-	docker-compose up -d
+docker_run:
+	docker-compose run reverb-notifier
 
 docker_logs:
 	docker-compose logs --tail=100 -f
