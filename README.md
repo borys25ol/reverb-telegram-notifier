@@ -1,4 +1,4 @@
-Reverb Telegram Notifier 
+Reverb Telegram Notifier
 ====================
 
 [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
@@ -51,6 +51,7 @@ TELEGRAM_CHAT_ID=<public/group-id>
 MONGO_URI=<mongo-uri>
 MONGO_DB=<mongo-collection>
 MONGO_PRODUCT_COLLECTION=<mongo-collection>
+MONGO_SCRAPING_LINKS_COLLECTION=<mongo-collection>
 ```
 
 

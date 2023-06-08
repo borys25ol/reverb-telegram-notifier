@@ -26,3 +26,15 @@ def get_mongo_product_collection() -> Collection:
         raise ValueError("Mongo Collection name is not provided in settings!")
 
     return client[settings["MONGO_DB"]][settings["MONGO_PRODUCT_COLLECTION"]]
+
+
+def get_mongo_scraping_link_collection() -> Collection:
+    client = get_mongo_client()
+
+    if not settings["MONGO_DB"]:
+        raise ValueError("Mongo Database name is not provided in settings!")
+
+    if not settings["MONGO_SCRAPING_LINKS_COLLECTION"]:
+        raise ValueError("Mongo Collection name is not provided in settings!")
+
+    return client[settings["MONGO_DB"]][settings["MONGO_SCRAPING_LINKS_COLLECTION"]]

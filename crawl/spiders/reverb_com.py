@@ -1,5 +1,5 @@
+from collections.abc import Iterator
 from datetime import datetime
-from typing import Iterator
 from urllib.parse import urlparse
 
 import scrapy
@@ -10,6 +10,7 @@ from scrapy.utils.project import get_project_settings
 
 from crawl.const import LINKS_TO_CHECK
 from crawl.items import ReverbProductItem
+from crawl.services.links import get_scraping_links
 from crawl.utils.extractors import chain_get
 from crawl.utils.payload import get_json_body_template
 
@@ -47,7 +48,7 @@ class ReverbComSpider(scrapy.Spider):
     }
 
     def start_requests(self) -> Iterator[Request]:
-        for item in LINKS_TO_CHECK:
+        for item in get_scraping_links():
             slug = self._extract_url_slug(url=item["link"])
             payload = self._build_request_payload(
                 slug=slug, limit=self.products_per_page, offset=0
