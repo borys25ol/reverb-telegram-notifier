@@ -8,7 +8,6 @@ from scrapy import Request
 from scrapy.http import HtmlResponse
 from scrapy.utils.project import get_project_settings
 
-from crawl.const import LINKS_TO_CHECK
 from crawl.items import ReverbProductItem
 from crawl.services.links import get_scraping_links
 from crawl.utils.extractors import chain_get
