@@ -4,3 +4,4 @@ python-dotenv==1.0.0
 python-telegram-bot==13.7
 scrapy==2.9.0
 tinydb==4.7.1
+Twisted==22.10.0
