@@ -17,6 +17,6 @@ class ReverbProductItem(scrapy.Item):
     price = scrapy.Field(output_processor=TakeFirst())
     shipping = scrapy.Field(output_processor=TakeFirst())
     product_link = scrapy.Field(output_processor=TakeFirst())
-    category_link = scrapy.Field(output_processor=TakeFirst())
+    link = scrapy.Field(output_processor=TakeFirst())
     timestamp = scrapy.Field(output_processor=TakeFirst())
     published = scrapy.Field(output_processor=TakeFirst())

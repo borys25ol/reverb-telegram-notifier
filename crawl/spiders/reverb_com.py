@@ -1,20 +1,22 @@
 from collections.abc import Iterator
 from datetime import datetime
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
-import scrapy
 from itemloaders import ItemLoader
-from scrapy import Request
+from scrapy import Request, Spider
 from scrapy.http import HtmlResponse
 from scrapy.utils.project import get_project_settings
 
 from crawl.items import ReverbProductItem
 from crawl.services.links import get_scraping_links
 from crawl.utils.extractors import chain_get
-from crawl.utils.payload import get_json_body_template
+from crawl.utils.payload import (
+    get_product_json_body_template,
+    get_search_json_body_template,
+)
 
 
-class ReverbComSpider(scrapy.Spider):
+class ReverbComSpider(Spider):
     name = "reverb.com"
 
     allowed_domains = ["reverb.com"]
@@ -24,17 +26,18 @@ class ReverbComSpider(scrapy.Spider):
     reverb_api_url = "https://rql.reverb.com/graphql"
 
     default_headers = {
-        "authority": "rql.reverb.com",
         "content-type": "application/json",
         "origin": "https://reverb.com",
         "referer": "https://reverb.com/",
         "user-agent": settings["USER_AGENT"],
         "x-display-currency": "USD",
-        "x-context-id": "9b89817b-e8d2-4d01-b03d-fdee0879c523",
+        "x-context-id": "e4e89d3f-68b0-4070-9773-939404ff01e4",
         "x-experiments": "proximity_features",
-        "x-item-region": "US",
-        "x-postal-code": "19809",
+        "x-postal-code": "07936",
+        "x-request-id": "878651b92af32481",
         "x-reverb-app": "REVERB",
+        "x-secondary-user-enabled": "false",
+        "x-session-id": "e1060f41-7ca0-469d-b829-d73088bccd62",
         "x-shipping-region": "US_CON",
     }
 
@@ -48,31 +51,41 @@ class ReverbComSpider(scrapy.Spider):
 
     def start_requests(self) -> Iterator[Request]:
         for item in get_scraping_links():
-            slug = self._extract_url_slug(url=item["link"])
-            payload = self._build_request_payload(
-                slug=slug, limit=self.products_per_page, offset=0
-            )
+            if "query" in item["link"]:
+                query = self._extract_search_param(url=item["link"])
+                payload = self._build_search_request_payload(query=query)
+                callback = self.parse_reverb_search_api
+            else:
+                slug = self._extract_url_slug(url=item["link"])
+                payload = self._build_product_request_payload(
+                    slug=slug, limit=self.products_per_page, offset=0
+                )
+                callback = self.parse_reverb_product_api
+
             yield Request(
                 method="POST",
                 url=self.reverb_api_url,
-                callback=self.parse_reverb_api,
+                callback=callback,
                 headers=self.default_headers,
                 body=payload,
-                cb_kwargs={"category_link": item["link"]},
+                cb_kwargs={"link": item["link"]},
             )
 
-    def parse_reverb_api(
-        self, response: HtmlResponse, category_link: str
-    ) -> list[dict]:
+    def parse_reverb_product_api(self, response: HtmlResponse, link: str) -> list[dict]:
         data = chain_get(response.json(), 0, "data", "allListings")
         yield from (
-            self.parse_reverb_product(product=product, category_link=category_link)
+            self.parse_reverb_product(product=product, link=link)
             for product in data["listings"]
         )
 
-    def parse_reverb_product(
-        self, product: dict, category_link: str
-    ) -> ReverbProductItem:
+    def parse_reverb_search_api(self, response: HtmlResponse, link: str) -> list[dict]:
+        data = chain_get(response.json(), 0, "data", "listingsSearch")
+        yield from (
+            self.parse_reverb_product(product=product, link=link)
+            for product in data["listings"]
+        )
+
+    def parse_reverb_product(self, product: dict, link: str) -> ReverbProductItem:
         l = ItemLoader(item=ReverbProductItem(), selector=product)
 
         l.add_value("seller_name", chain_get(product, "shop", "name"))
@@ -97,7 +110,7 @@ class ReverbComSpider(scrapy.Spider):
             "product_link",
             self._make_product_url(product_id=product["id"], slug=product["slug"]),
         )
-        l.add_value("category_link", category_link)
+        l.add_value("link", link)
         l.add_value("timestamp", chain_get(product, "publishedAt", "seconds"))
 
         l.add_value(
@@ -122,6 +135,17 @@ class ReverbComSpider(scrapy.Spider):
         return urlparse(url).path.split("/")[-1]
 
     @staticmethod
-    def _build_request_payload(slug: str, limit: int = 12, offset: int = 0) -> str:
-        template = get_json_body_template()
+    def _extract_search_param(url: str) -> str:
+        return parse_qs(qs=urlparse(url).query)["query"][0]
+
+    @staticmethod
+    def _build_product_request_payload(
+        slug: str, limit: int = 12, offset: int = 0
+    ) -> str:
+        template = get_product_json_body_template()
         return template.render(slug=slug, limit=limit, offset=offset)
+
+    @staticmethod
+    def _build_search_request_payload(query: str) -> str:
+        template = get_search_json_body_template()
+        return template.render(search_query=query)
