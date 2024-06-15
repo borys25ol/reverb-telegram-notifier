@@ -52,7 +52,7 @@ class ReverbComSpider(Spider):
     def start_requests(self) -> Iterator[Request]:
         for item in get_scraping_links():
             if "query" in item["link"]:
-                query = self._extract_search_param(url=item["link"])
+                query = self._extract_query_param(url=item["link"], name="query")
                 payload = self._build_search_request_payload(query=query)
                 callback = self.parse_reverb_search_api
             else:
@@ -135,8 +135,8 @@ class ReverbComSpider(Spider):
         return urlparse(url).path.split("/")[-1]
 
     @staticmethod
-    def _extract_search_param(url: str) -> str:
-        return parse_qs(qs=urlparse(url).query)["query"][0]
+    def _extract_query_param(url: str, name: str) -> str:
+        return parse_qs(qs=urlparse(url).query)[name][0]
 
     @staticmethod
     def _build_product_request_payload(
