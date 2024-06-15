@@ -1,13 +1,11 @@
-from pathlib import Path
-
-from jinja2 import Environment, FileSystemLoader, Template
+from jinja2 import Environment, FileSystemLoader
 from scrapy.utils.project import get_project_settings
 from telegram import Bot, ParseMode
 
 settings = get_project_settings()
 
 env = Environment(
-    loader=FileSystemLoader(settings["TEMPLATES_PATH"]),
+    loader=FileSystemLoader(settings["TELEGRAM_TEMPLATES_PATH"]),
     trim_blocks=True,
     lstrip_blocks=True,
 )

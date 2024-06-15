@@ -7,7 +7,7 @@ load_dotenv()
 
 BASE_PATH = Path(__file__).parent.parent
 
-TEMPLATES_PATH = BASE_PATH / "crawl" / "templates"
+TELEGRAM_TEMPLATES_PATH = BASE_PATH / "crawl" / "templates" / "telegram"
 
 # Telegram settings
 TELEGRAM_MESSAGE_TEMPLATE_FILE = "telegram_message.jinja2"
