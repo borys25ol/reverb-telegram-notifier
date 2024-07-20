@@ -1,3 +1,4 @@
+import json
 from collections.abc import Iterator
 from datetime import datetime
 from urllib.parse import parse_qs, urlparse
@@ -7,13 +8,10 @@ from scrapy import Request, Spider
 from scrapy.http import HtmlResponse
 from scrapy.utils.project import get_project_settings
 
-from crawl.items import ReverbProductItem
+from crawl.items.product import ReverbProductItem
 from crawl.services.links import get_scraping_links
 from crawl.utils.extractors import chain_get
-from crawl.utils.payload import (
-    get_product_json_body_template,
-    get_search_json_body_template,
-)
+from crawl.utils.payload import build_product_payload, build_search_payload
 
 
 class ReverbComSpider(Spider):
@@ -52,13 +50,18 @@ class ReverbComSpider(Spider):
     def start_requests(self) -> Iterator[Request]:
         for item in get_scraping_links():
             if "query" in item["link"]:
-                query = self._extract_query_param(url=item["link"], name="query")
-                payload = self._build_search_request_payload(query=query)
+                filters = self._extract_query_params(url=item["link"])
+                payload = json.dumps(
+                    build_search_payload(**filters, limit=self.products_per_page)
+                )
                 callback = self.parse_reverb_search_api
             else:
                 slug = self._extract_url_slug(url=item["link"])
-                payload = self._build_product_request_payload(
-                    slug=slug, limit=self.products_per_page, offset=0
+                filters = self._extract_query_params(url=item["link"])
+                payload = json.dumps(
+                    build_product_payload(
+                        **filters, slug=slug, limit=self.products_per_page
+                    )
                 )
                 callback = self.parse_reverb_product_api
 
@@ -72,14 +75,14 @@ class ReverbComSpider(Spider):
             )
 
     def parse_reverb_product_api(self, response: HtmlResponse, link: str) -> list[dict]:
-        data = chain_get(response.json(), 0, "data", "allListings")
+        data = chain_get(response.json(), "data", "allListings")
         yield from (
             self.parse_reverb_product(product=product, link=link)
             for product in data["listings"]
         )
 
     def parse_reverb_search_api(self, response: HtmlResponse, link: str) -> list[dict]:
-        data = chain_get(response.json(), 0, "data", "listingsSearch")
+        data = chain_get(response.json(), "data", "listingsSearch")
         yield from (
             self.parse_reverb_product(product=product, link=link)
             for product in data["listings"]
@@ -135,17 +138,6 @@ class ReverbComSpider(Spider):
         return urlparse(url).path.split("/")[-1]
 
     @staticmethod
-    def _extract_query_param(url: str, name: str) -> str:
-        return parse_qs(qs=urlparse(url).query)[name][0]
-
-    @staticmethod
-    def _build_product_request_payload(
-        slug: str, limit: int = 12, offset: int = 0
-    ) -> str:
-        template = get_product_json_body_template()
-        return template.render(slug=slug, limit=limit, offset=offset)
-
-    @staticmethod
-    def _build_search_request_payload(query: str) -> str:
-        template = get_search_json_body_template()
-        return template.render(search_query=query)
+    def _extract_query_params(url: str) -> dict[str, str]:
+        params = parse_qs(qs=urlparse(url).query)
+        return {param: values[0] for param, values in params.items()}

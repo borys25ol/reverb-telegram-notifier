@@ -1,4 +1,4 @@
-from crawl.clients import get_mongo_scraping_link_collection
+from crawl.utils.mongodb import get_mongo_scraping_link_collection
 
 
 def get_scraping_links() -> list[dict]:

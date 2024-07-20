@@ -3,7 +3,7 @@ import logging
 from itemadapter import ItemAdapter
 from scrapy import Spider
 
-from crawl.items import ReverbProductItem
+from crawl.items.product import ReverbProductItem
 from crawl.services.products import get_available_product_ids, insert_new_products
 from crawl.utils.telegram import send_message
 

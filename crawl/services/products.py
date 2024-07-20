@@ -1,4 +1,4 @@
-from crawl.clients import get_mongo_product_collection
+from crawl.utils.mongodb import get_mongo_product_collection
 
 
 def get_available_product_ids() -> set[str]:
