@@ -48,17 +48,13 @@ class ReverbComSpider(Spider):
         for item in get_scraping_links():
             if "query" in item["link"]:
                 filters = self._extract_query_params(url=item["link"])
-                payload = json.dumps(
-                    build_search_payload(**filters, limit=self.products_per_page)
-                )
+                payload = build_search_payload(**filters, limit=self.products_per_page)
                 callback = self.parse_reverb_search_api
             else:
                 slug = self._extract_url_slug(url=item["link"])
                 filters = self._extract_query_params(url=item["link"])
-                payload = json.dumps(
-                    build_product_payload(
-                        **filters, slug=slug, limit=self.products_per_page
-                    )
+                payload = build_product_payload(
+                    **filters, slug=slug, limit=self.products_per_page
                 )
                 callback = self.parse_reverb_product_api
 
@@ -67,7 +63,7 @@ class ReverbComSpider(Spider):
                 url=self.reverb_api_url,
                 callback=callback,
                 headers=self.default_headers,
-                body=payload,
+                body=json.dumps(payload),
                 cb_kwargs={"link": item["link"]},
             )
 
