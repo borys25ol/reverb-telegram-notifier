@@ -29,13 +29,10 @@ class ReverbComSpider(Spider):
         "referer": "https://reverb.com/",
         "user-agent": settings["USER_AGENT"],
         "x-display-currency": "USD",
-        "x-context-id": "e4e89d3f-68b0-4070-9773-939404ff01e4",
         "x-experiments": "proximity_features",
         "x-postal-code": "07936",
-        "x-request-id": "878651b92af32481",
         "x-reverb-app": "REVERB",
         "x-secondary-user-enabled": "false",
-        "x-session-id": "e1060f41-7ca0-469d-b829-d73088bccd62",
         "x-shipping-region": "US_CON",
     }
 
