@@ -6,9 +6,9 @@ Module with GraphQL request payloads.
 def build_product_payload(
     slug: str,
     limit: int,
-    item_region: str | None = None,
     price_min: str | None = None,
     price_max: str | None = None,
+    item_region: str | None = None,
     ships_to: str | None = None,
 ) -> dict:
     return {
@@ -22,7 +22,7 @@ def build_product_payload(
             "fallbackToEverywhereElse": False,
             "fretboardMaterial": None,
             "includeFullFinancingFields": True,
-            "itemRegion": item_region or "US",
+            "itemRegion": item_region,
             "limit": limit,
             "offset": 0,
             "priceMin": price_min,
@@ -50,6 +50,7 @@ def build_search_payload(
     condition: str | None = None,
     price_min: str | None = None,
     price_max: str | None = None,
+    item_region: str | None = None,
     ships_to: str | None = None,
 ) -> dict:
     category_slugs = [slug for slug in (product_type, category) if slug]
@@ -65,6 +66,7 @@ def build_search_payload(
                 "conditionSlugs": [condition] if condition else [],
                 "shippingRegionCodes": [ships_to] if ships_to else [],
                 "itemState": [],
+                "itemRegion": item_region,
                 "itemCity": [],
                 "curatedSetSlugs": [],
                 "saleSlugs": [],
@@ -97,6 +99,7 @@ def build_search_payload(
                 "conditionSlugs": [condition] if condition else [],
                 "shippingRegionCodes": [ships_to] if ships_to else [],
                 "itemState": [],
+                "itemRegion": item_region,
                 "itemCity": [],
                 "curatedSetSlugs": [],
                 "saleSlugs": [],
@@ -130,6 +133,7 @@ def build_search_payload(
                 "conditionSlugs": [condition] if condition else [],
                 "shippingRegionCodes": [ships_to] if ships_to else [],
                 "itemState": [],
+                "itemRegion": item_region,
                 "itemCity": [],
                 "curatedSetSlugs": [],
                 "saleSlugs": [],
