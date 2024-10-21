@@ -7,16 +7,6 @@ def chain_get(arg: Any, *keys: Any, **defaults: Any) -> Any:
 
     default for key is `defaults[key]`
     if not found, default is None for last key or empty dict for other keys
-
-    >>> arg = {'a': {'b': {'c': 1}}}
-    >>> chain_get(arg, 'a', 'b', 'c')
-    ... 1
-    >>> chain_get(arg, 'a', 'b', 'd')
-    ...
-    >>> chain_get(arg, 'a', 'b', 'd', d=2)
-    ... 2
-    >>> chain_get(arg, 'd', 'f', 'e', f={'e': 'hello'})
-    ... 'hello'
     """
     if not keys:
         raise ValueError("no keys specified")
@@ -36,3 +26,11 @@ def chain_get(arg: Any, *keys: Any, **defaults: Any) -> Any:
         return arg[tail] if arg[tail] else defaults.get(tail)
     except (IndexError, KeyError):
         return defaults.get(tail)
+
+
+def to_snake_case(string: str) -> str:
+    """
+    Convert string to snake_case format.
+    """
+    snake = "".join(["_" + c.lower() if c.isupper() else c for c in string])
+    return snake[1:] if snake.startswith("_") else snake

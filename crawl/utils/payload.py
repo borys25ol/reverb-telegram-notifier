@@ -10,13 +10,14 @@ def build_product_payload(
     price_max: str | None = None,
     item_region: str | None = None,
     ships_to: str | None = None,
+    canonical_finish: str | None = None,
 ) -> dict:
     return {
         "operationName": "Csp_Filters_And_ListingsQuery",
         "variables": {
             "aggs": ["CATEGORY_SLUGS", "CONDITION_SLUGS", "DECADES", "TRAITS"],
             "bumpLimit": 3,
-            "canonicalFinishes": [],
+            "canonicalFinishes": [canonical_finish] or [],
             "conditionSlugs": [],
             "cspSlug": slug,
             "fallbackToEverywhereElse": False,
@@ -52,6 +53,7 @@ def build_search_payload(
     price_max: str | None = None,
     item_region: str | None = None,
     ships_to: str | None = None,
+    canonical_finish: str | None = None,
 ) -> dict:
     category_slugs = [slug for slug in (product_type, category) if slug]
     return {
@@ -84,7 +86,7 @@ def build_search_payload(
                     {"name": "ltr_v3_marketplace_2024_06", "group": "1"},
                     {"name": "ltr_v4_marketplace_2024_07", "group": "0"},
                 ],
-                "canonicalFinishes": [],
+                "canonicalFinishes": [canonical_finish] or [],
                 "limit": limit,
                 "offset": 0,
                 "fallbackToOr": True,

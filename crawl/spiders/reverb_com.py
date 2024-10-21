@@ -10,7 +10,7 @@ from scrapy.utils.project import get_project_settings
 
 from crawl.items.product import ReverbProductItem
 from crawl.services.links import get_scraping_links
-from crawl.utils.extractors import chain_get
+from crawl.utils.extractors import chain_get, to_snake_case
 from crawl.utils.payload import build_product_payload, build_search_payload
 
 
@@ -133,4 +133,4 @@ class ReverbComSpider(Spider):
     @staticmethod
     def _extract_query_params(url: str) -> dict[str, str]:
         params = parse_qs(qs=urlparse(url).query)
-        return {param: values[0] for param, values in params.items()}
+        return {to_snake_case(param): values[0] for param, values in params.items()}
