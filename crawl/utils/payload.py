@@ -17,7 +17,7 @@ def build_product_payload(
         "variables": {
             "aggs": ["CATEGORY_SLUGS", "CONDITION_SLUGS", "DECADES", "TRAITS"],
             "bumpLimit": 3,
-            "canonicalFinishes": [canonical_finish] or [],
+            "canonicalFinishes": [canonical_finish] if canonical_finish else [],
             "conditionSlugs": [],
             "cspSlug": slug,
             "fallbackToEverywhereElse": False,
@@ -86,7 +86,7 @@ def build_search_payload(
                     {"name": "ltr_v3_marketplace_2024_06", "group": "1"},
                     {"name": "ltr_v4_marketplace_2024_07", "group": "0"},
                 ],
-                "canonicalFinishes": [canonical_finish] or [],
+                "canonicalFinishes": [canonical_finish] if canonical_finish else [],
                 "limit": limit,
                 "offset": 0,
                 "fallbackToOr": True,
